@@ -1,0 +1,41 @@
+version: '3.9'
+services:
+  app:
+    build: .
+    container_name: go-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - REDIS_ADDR=${REDIS_ADDR}
+      - REDIS_PASS=${REDIS_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - app-net
+
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "33306:3306"
+    networks:
+      - app-net
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+networks:
+  app-net:
+
+volumes:
+  mysql-data:
