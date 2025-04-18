@@ -15,6 +15,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
+	"github.com/taguo1109/go-ticket-system/internal/handler"
+	"github.com/taguo1109/go-ticket-system/internal/kafkautil"
 	"golang.org/x/net/context"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -31,7 +33,7 @@ var (
 
 func initEnv() {
 	if err := godotenv.Load(".env.local"); err != nil {
-		log.Println("⚠️  .env not found, using system env")
+		log.Println(".env not found, using system env")
 	}
 }
 
@@ -45,10 +47,10 @@ func initMySQL() {
 	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("❌ MySQL connection failed: %v", err)
+		log.Fatalf("MySQL connection failed: %v", err)
 	}
 	DB = db
-	log.Println("✅ Connected to MySQL")
+	log.Println("Connected to MySQL")
 }
 
 func initRedis() {
@@ -60,23 +62,24 @@ func initRedis() {
 
 	_, err := rdb.Ping(CTX).Result()
 	if err != nil {
-		log.Fatalf("❌ Redis connection failed: %v", err)
+		log.Fatalf("Redis connection failed: %v", err)
 	}
 	RDB = rdb
-	log.Println("✅ Connected to Redis")
+	log.Println("Connected to Redis")
 }
 
 func main() {
 	initEnv()
 	initMySQL()
 	initRedis()
+	kafkautil.InitWriter()
 
 	r := gin.Default()
-
+	r.POST("/api/book", handler.BookTicketHandler)
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"msg": "pong"})
 	})
 
-	log.Println("🚀 API Server running on :8080")
+	log.Println("API Server running on :8080")
 	log.Fatal(r.Run(":8080"))
 }
